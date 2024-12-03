@@ -2,7 +2,10 @@ import flask
 import sys
 import pathlib
 import datetime
+import time
 import pytz
+import thefuzz.process
+import thefuzz.fuzz
 
 import os
 import waitress
@@ -13,6 +16,43 @@ import ruamel.yaml.error
 
 app = flask.Flask(__name__)
 app.jinja_env.autoescape = True
+
+
+ATHLETES = {}
+ATHLETES_LAST_RECHECKED = {}
+
+
+def load_athlete(athlete_id):
+    with open(
+        app.config["RACEML_DATABASE"] / "athletes" / (athlete_id + ".yaml"),
+        "r",
+        encoding="utf-8",
+    ) as file:
+        ATHLETES[athlete_id] = yaml.safe_load(file.read())
+        ATHLETES_LAST_RECHECKED[athlete_id] = time.time()
+
+
+def get_athletes():
+    athlete_files = set(
+        [f.stem for f in (app.config["RACEML_DATABASE"] / "athletes").glob("*.yaml")]
+    )
+    athletes_cached = set(ATHLETES.keys())
+
+    removed = athletes_cached - athlete_files
+    added = athlete_files - athletes_cached
+
+    for athlete in removed:
+        del ATHLETES[athlete]
+        del ATHLETES_LAST_RECHECKED[athlete]
+
+    for athlete in added:
+        load_athlete(athlete)
+
+    for athlete in ATHLETES_LAST_RECHECKED:
+        if time.time() - ATHLETES_LAST_RECHECKED[athlete] > 5:
+            load_athlete(athlete)
+
+    return ATHLETES
 
 
 def get_config():
@@ -140,6 +180,32 @@ def api_athlete(student_id):
         return flask.jsonify(athlete)
     except FileNotFoundError:
         return "Not Found", 404
+
+
+@app.route("/api/athlete_search")
+def api_athlete_search():
+    query = flask.request.args.get("query", "")
+    athletes = get_athletes()
+
+    results = thefuzz.process.extract(
+        query,
+        athletes.items(),
+        processor=lambda x: x,
+        scorer=lambda q, c: thefuzz.fuzz.WRatio(q, c[1]["name"]),
+        limit=None,
+    )
+
+    best_match = max(results, key=lambda x: x[1])
+
+    # include any results with a match over the best - 30
+    results = list(
+        filter(
+            lambda x: x[1] > best_match[1] - 30,
+            results,
+        )
+    )
+
+    return flask.jsonify(results)
 
 
 def update_dictionary(dictionary, new_data):

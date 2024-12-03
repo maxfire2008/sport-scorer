@@ -15,8 +15,8 @@ export class Table {
     init(rows, type, doc_type, config) {
         this.config = config;
         this.columns = [];
-        console.log('type', type);
-        console.log('doc_type', doc_type);
+        console.log("type", type);
+        console.log("doc_type", doc_type);
 
         this.element = document.createElement("table");
 
@@ -37,58 +37,44 @@ export class Table {
             this.appendRow(row);
         }
 
-        if (type === 'race' && doc_type === 'results') {
-            this.appendColumn(
-                {
-                    "type": NumberInputCell,
-                    "key": "heat",
-                    "heading": "Heat",
-                }
-            )
-            this.appendColumn(
-                {
-                    "type": NumberInputCell,
-                    "key": "lane",
-                    "heading": "Lane",
-                }
-            )
-            this.appendColumn(
-                {
-                    "type": AthleteInputCell,
-                    "key": "athlete",
-                    "heading": "Athlete",
-                }
-            )
-        } else if (type === 'race' && doc_type === 'times') {
-            this.appendColumn(
-                {
-                    "type": NumberInputCell,
-                    "key": "heat",
-                    "heading": "Heat",
-                }
-            )
-            this.appendColumn(
-                {
-                    "type": NumberInputCell,
-                    "key": "lane",
-                    "heading": "Lane",
-                }
-            )
-            this.appendColumn(
-                {
-                    "type": DurationInputCell,
-                    "key": "time",
-                    "heading": "Time",
-                }
-            )
-        } else if (type === 'high_jump') {
-            this.appendColumn(
-                {
-                    "type": AthleteInputCell,
-                    "key": "athlete",
-                    "heading": "Athlete",
-                }
-            )
+        if (type === "race" && doc_type === "results") {
+            this.appendColumn({
+                type: NumberInputCell,
+                key: "heat",
+                heading: "Heat",
+            });
+            this.appendColumn({
+                type: NumberInputCell,
+                key: "lane",
+                heading: "Lane",
+            });
+            this.appendColumn({
+                type: AthleteInputCell,
+                key: "athlete",
+                heading: "Athlete",
+            });
+        } else if (type === "race" && doc_type === "times") {
+            this.appendColumn({
+                type: NumberInputCell,
+                key: "heat",
+                heading: "Heat",
+            });
+            this.appendColumn({
+                type: NumberInputCell,
+                key: "lane",
+                heading: "Lane",
+            });
+            this.appendColumn({
+                type: DurationInputCell,
+                key: "time",
+                heading: "Time",
+            });
+        } else if (type === "high_jump") {
+            this.appendColumn({
+                type: AthleteInputCell,
+                key: "athlete",
+                heading: "Athlete",
+            });
             // iterate all the heights in the data and add a column for each
             let heights = new Set();
             for (let row of rows) {
@@ -99,27 +85,23 @@ export class Table {
             }
             heights = Array.from(heights).sort();
             for (let height of heights) {
-                this.appendColumn(
-                    {
-                        "type": HighJumpInputCell,
-                        "key": "heights." + height,
-                        "heading": height,
-                    }
-                )
+                this.appendColumn({
+                    type: HighJumpInputCell,
+                    key: "heights." + height,
+                    heading: height,
+                });
             }
         }
 
-        this.appendColumn(
-            {
-                "type": DeleteButtonCell,
-                "key": "!delete",
-                "heading": "",
-            }
-        )
+        this.appendColumn({
+            type: DeleteButtonCell,
+            key: "!delete",
+            heading: "",
+        });
 
         // register key event listener
         this.keydown = this.keydown.bind(this);
-        document.addEventListener('keydown', this.keydown);
+        document.addEventListener("keydown", this.keydown);
     }
 
     appendColumn(column) {
@@ -132,13 +114,13 @@ export class Table {
         }
     }
 
-    appendRow(row) {
+    appendRow(row, select) {
         let new_row = new Row(row);
         for (let column of this.columns) {
             new_row.appendCell(column.type, column.key, this.config);
         }
-        if (new_row.onAdd !== undefined) {
-            new_row.onAdd();
+        if (select !== undefined) {
+            new_row.select(select);
         }
         this.rows.push(new_row);
         this.tbody.appendChild(new_row.element);
@@ -146,15 +128,15 @@ export class Table {
 
     keydown(event) {
         // Enter will go to the next row but the same cell
-        if (event.key === 'Enter') {
+        if (event.key === "Enter") {
             event.preventDefault();
             // get the target of the key event and get it's row
             let target = event.target;
             let row = target.parentElement;
-            while (row.tagName !== 'TR') {
+            while (row.tagName !== "TR") {
                 row = row.parentElement;
                 if (row === this.tbody) {
-                    throw new Error('Could not find row');
+                    throw new Error("Could not find row");
                 }
             }
 
@@ -163,10 +145,10 @@ export class Table {
 
             // get the index of the object within the row (note: it may be nested)
             let cell = target;
-            while (cell.tagName !== 'TD') {
+            while (cell.tagName !== "TD") {
                 cell = cell.parentElement;
                 if (cell === row) {
-                    throw new Error('Could not find cell');
+                    throw new Error("Could not find cell");
                 }
             }
             let cell_index = Array.from(row.children).indexOf(cell);

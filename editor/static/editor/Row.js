@@ -55,6 +55,19 @@ export class Row {
         this.cells[i].cell.focus();
     }
 
+    select(key) {
+        // select the cell with the key
+        for (let cell of this.cells) {
+            if (cell.key === key) {
+                cell.cell.focus();
+            }
+            if (cell.key === "athlete") {
+                console.log(cell.cell);
+                cell.cell.button.click();
+            }
+        }
+    }
+
     value() {
         let row = {};
         for (let cell of this.cells) {

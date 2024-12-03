@@ -25,14 +25,15 @@ export class AthleteInputCell {
         this.button.textContent = this.value;
         this.updateButtonTextAndColour();
         this.button.addEventListener('click', () => {
-            // athleteSelectModal((athlete) => {
-            //     if (athlete !== null) {
-            //         this.button.textContent = athlete.name;
-            //         this.value = athlete.id;
-            //     }
-            // });
-            this.value = prompt("Enter athlete ID", this.value);
-            this.updateButtonTextAndColour();
+            athleteSelectModal((athlete) => {
+                if (athlete !== undefined) {
+                    this.button.textContent = athlete.name;
+                    this.value = athlete.id;
+                    this.updateButtonTextAndColour();
+                }
+            });
+            // this.value = prompt("Enter athlete ID", this.value);
+            // this.updateButtonTextAndColour();
         });
 
         this.element.appendChild(this.button);
